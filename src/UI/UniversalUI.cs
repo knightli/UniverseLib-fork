@@ -22,6 +22,7 @@ namespace UniverseLib.UI
     {
         internal static readonly Dictionary<string, UIBase> registeredUIs = new();
         internal static readonly List<UIBase> uiBases = new();
+        internal static bool FocussedInAnyPanels;
 
         /// <summary>Returns true if UniverseLib is currently initializing it's UI.</summary>
         public static bool Initializing { get; internal set; } = true;
@@ -147,12 +148,35 @@ namespace UniverseLib.UI
             PanelManager.focusHandledThisFrame = false;
             PanelManager.draggerHandledThisFrame = false;
 
+            FocussedInAnyPanels = false;
+            
             for (int i = 0; i < uiBases.Count; i++)
             {
                 UIBase ui = uiBases[i];
                 if (ui.Enabled)
+                {
                     ui.Update();
+                    if (ui.Panels.wasAnyFocussed)
+                        FocussedInAnyPanels = true;
+                }
             }
+            
+            // On the legacy input system, it's possible the game will listen for inputs after UniverseLib
+            // In these cases, we want to eat as much inputs as possible so long as we have the focus
+            if (InputManager.CurrentType == InputType.Legacy && FocussedInAnyPanels && CanEatInput())
+            {
+                InputManager.ResetInputAxes();
+            }
+        }
+
+        private static bool CanEatInput()
+        {
+            return !PanelManager.wasAnyDragging && !PanelManager.Resizing
+                && !InputManager.GetKey(KeyCode.LeftControl) && !InputManager.GetKey(KeyCode.RightControl)
+                && !InputManager.GetKey(KeyCode.LeftAlt) && !InputManager.GetKey(KeyCode.RightAlt)
+                && !InputManager.GetKey(KeyCode.LeftShift) && !InputManager.GetKey(KeyCode.RightShift)
+                && !InputManager.GetMouseButton(0) && !InputManager.GetMouseButtonUp(0)
+                && !InputManager.GetMouseButton(1) && !InputManager.GetMouseButtonUp(1);
         }
 
         // UI Construction
