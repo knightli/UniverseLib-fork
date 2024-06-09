@@ -2,7 +2,7 @@
     <PropertyGroup>
         <Configuration Condition="$(Configuration) == ''">Release_Mono</Configuration>
         <OutputType>Library</OutputType>
-        <LangVersion>10.0</LangVersion>
+        <LangVersion>latest</LangVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
