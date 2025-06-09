@@ -1,4 +1,4 @@
-﻿#if IL2CPP
+﻿#if CPP
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,8 +12,13 @@ using UniverseLib.Input;
 using UnityEngine.EventSystems;
 using HarmonyLib;
 using UniverseLib.Utility;
+#if INTEROP
 using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
+#else
+using UnhollowerRuntimeLib;
+using UnhollowerBaseLib;
+#endif
 
 namespace UniverseLib.Runtime.Il2Cpp
 {

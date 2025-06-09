@@ -8,7 +8,7 @@ namespace UniverseLib.UI.Widgets.ScrollView
 {
     /// <summary>
     /// Used to handle the underlying height data for a scroll pool, tracking which data values are at which position and how far they span.<br/><br/>
-    /// 
+    ///
     /// A DataHeightCache is created and managed automatically by a ScrollPool, you do not need to use this class yourself.
     /// </summary>
     public class DataHeightCache<T> where T : ICell
@@ -48,6 +48,17 @@ namespace UniverseLib.UI.Widgets.ScrollView
 
         /// <summary>Get the first range (division of DefaultHeight) which the position appears in.</summary>
         private int GetRangeFloorOfPosition(float position) => (int)Math.Floor((decimal)position / (decimal)DefaultHeight);
+
+        public bool TryGetIndexItem(int index, out DataViewInfo item)
+        {
+            if (index < 0 || index >= heightCache.Count)
+            {
+                item = default;
+                return false;
+            }
+            item = heightCache[index];
+            return true;
+        }
 
         public int GetFirstDataIndexAtPosition(float desiredHeight)
         {

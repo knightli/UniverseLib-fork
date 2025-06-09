@@ -1,4 +1,4 @@
-﻿#if IL2CPP
+﻿#if CPP
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,11 +19,19 @@ using System.Text.RegularExpressions;
 using UniverseLib.Reflection;
 using System.Diagnostics;
 using UniverseLib.Runtime.Il2Cpp;
+#if INTEROP
 using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.Runtime;
 using Il2CppInterop.Common.Attributes;
+#endif
+#if UNHOLLOWER
+using UnhollowerBaseLib;
+using UnhollowerRuntimeLib;
+using UnhollowerBaseLib.Runtime;
+using UnhollowerBaseLib.Attributes;
+#endif
 
 namespace UniverseLib
 {
@@ -89,7 +97,7 @@ namespace UniverseLib
                 if (obj is Il2CppObjectBase cppBase)
                 {
                     // Don't need to cast ArrayBase
-                    if (type.BaseType.IsGenericType 
+                    if (type.BaseType.IsGenericType
                         && type.BaseType.GetGenericTypeDefinition() == typeof(Il2CppArrayBase<>))
                         return type;
 
@@ -132,11 +140,24 @@ namespace UniverseLib
             if (obfuscatedToDeobfuscatedTypes.TryGetValue(fullname, out Type deob))
                 return deob;
 
+#if ML
+            // The new melonloader prepends Il2Cpp in front of most namespaces
+            bool isUnityType = fullname.StartsWith("Unity") && fullname.Contains('.');
+            bool isInjected = "InjectedMonoTypes".Equals(cppType.Assembly.GetName().Name);
+            if (!isUnityType && !isInjected)
+            {
+                if (fullname.Contains('.'))
+                    fullname = $"Il2Cpp{fullname}";
+                else
+                    fullname = $"Il2Cpp.{fullname}";
+            }
+#else
             // An Il2CppType cannot ever be a System type.
-            // Unhollower returns Il2CppSystem types as System for some reason.
+            // Unhollower returns Il2CppSystem types and System for some reason.
             // Let's just manually fix that.
             if (fullname.StartsWith("System."))
                 fullname = $"Il2Cpp{fullname}";
+#endif
 
             if (!AllTypes.TryGetValue(fullname, out Type monoType))
             {
@@ -208,15 +229,15 @@ namespace UniverseLib
                 // from il2cpp primitive to system primitive
                 if (IsIl2CppPrimitive(fromType) && toType.IsPrimitive)
                     return MakeMonoPrimitive(obj);
-                
+
                 // ...to il2cpp primitive
                 if (IsIl2CppPrimitive(toType))
                     return MakeIl2CppPrimitive(toType, obj);
-                
+
                 // ...to il2cpp object
                 if (typeof(Il2CppSystem.Object).IsAssignableFrom(toType))
                     return BoxIl2CppObject(obj).TryCast(toType);
-                
+
                 // else just return the object, no special casting should be required
                 return obj;
             }
@@ -368,7 +389,7 @@ namespace UniverseLib
 
         // Helpers for Il2Cpp primitive <-> Mono
 
-        internal static readonly Dictionary<string, Type> il2cppPrimitivesToMono = new()
+        internal static readonly IReadOnlyDictionary<string, Type> il2cppPrimitivesToMono = new Dictionary<string, Type>()
         {
             { "Il2CppSystem.Boolean", typeof(bool) },
             { "Il2CppSystem.Byte",    typeof(byte) },
@@ -429,7 +450,7 @@ namespace UniverseLib
         {
             if (obj is string || obj is Il2CppSystem.String)
                 return true;
-        
+
             if (obj is Il2CppSystem.Object cppObj)
             {
                 Il2CppSystem.Type type = cppObj.GetIl2CppType();
@@ -533,7 +554,7 @@ namespace UniverseLib
         {
             foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
             {
-                foreach (Type type in asm.GetTypes())
+                foreach (Type type in asm.TryGetTypes())
                     TryCacheDeobfuscatedType(type);
             }
         }
@@ -633,7 +654,7 @@ namespace UniverseLib
             try
             {
                 //Universe.Log($"Loading assembly '{Path.GetFileName(fullPath)}'");
-                Assembly.LoadFile(fullPath);
+                Assembly.LoadFrom(fullPath);
                 return true;
             }
             catch
@@ -660,7 +681,9 @@ namespace UniverseLib
             try
             {
                 if (cppIEnumerablePointer == IntPtr.Zero)
+                {
                     Il2CppTypeNotNull(typeof(Il2CppSystem.Collections.IEnumerable), out cppIEnumerablePointer);
+                }
 
                 if (cppIEnumerablePointer != IntPtr.Zero
                     && Il2CppTypeNotNull(type, out IntPtr assignFromPtr)
@@ -669,7 +692,10 @@ namespace UniverseLib
                     return true;
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Universe.LogWarning($"IEnumerable of type [{type.FullName}] failed to check: {ex}");
+            }
 
             return false;
         }
@@ -725,19 +751,27 @@ namespace UniverseLib
         protected override bool Internal_IsDictionary(Type type)
         {
             if (base.Internal_IsDictionary(type))
+            {
                 return true;
-
+            }
             try
             {
-                if (cppIDictionaryPointer == IntPtr.Zero)
-                    if (!Il2CppTypeNotNull(typeof(Il2CppSystem.Collections.IDictionary), out cppIDictionaryPointer))
-                        return false;
+                if (cppIDictionaryPointer == IntPtr.Zero &&
+                    !Il2CppTypeNotNull(typeof(Il2CppSystem.Collections.IDictionary), out cppIDictionaryPointer))
+                {
+                    return false;
+                }
 
                 if (Il2CppTypeNotNull(type, out IntPtr classPtr)
                     && IL2CPP.il2cpp_class_is_assignable_from(cppIDictionaryPointer, classPtr))
+                {
                     return true;
+                }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Universe.LogWarning($"IDictionary of type [{type.FullName}] failed to check : {ex}");
+            }
 
             return false;
         }
@@ -789,12 +823,12 @@ namespace UniverseLib
                 Il2CppEnumerator valuesEnumerator = new(values, values.GetActualType());
 
                 dictEnumerator = new Il2CppDictionary(keysEnumerator, valuesEnumerator);
-                
+
                 return true;
             }
             catch (Exception ex)
             {
-                Universe.Log($"IDictionary failed to enumerate: {ex}");
+                Universe.LogWarning($"IDictionary failed to enumerate: {ex}");
                 dictEnumerator = null;
                 return false;
             }

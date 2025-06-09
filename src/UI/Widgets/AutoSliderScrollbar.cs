@@ -16,7 +16,15 @@ namespace UniverseLib.UI.Widgets
     /// </summary>
     public class AutoSliderScrollbar : UIBehaviourModel
     {
-        public override GameObject UIRoot => Slider?.gameObject;
+        public override GameObject UIRoot
+        {
+            get
+            {
+                if (Slider)
+                    return Slider.gameObject;
+                return null;
+            }
+        }
 
         public Slider Slider { get; }
         public Scrollbar Scrollbar { get; }

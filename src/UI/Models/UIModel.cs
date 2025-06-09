@@ -33,7 +33,8 @@ namespace UniverseLib.UI.Models
 
         public virtual void SetActive(bool active)
         {
-            UIRoot?.SetActive(active);
+            if (UIRoot)
+                UIRoot.SetActive(active);
         }
 
         public virtual void Destroy()

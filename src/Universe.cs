@@ -10,15 +10,19 @@ using UniverseLib.Config;
 using UniverseLib.Input;
 using UniverseLib.Runtime;
 using UniverseLib.UI;
-
-#if IL2CPP
+#if INTEROP
 using Il2CppInterop.Runtime;
 using IL2CPPUtils = Il2CppInterop.Common.Il2CppInteropUtils;
+#endif
+#if UNHOLLOWER
+using UnhollowerBaseLib;
+using UnhollowerRuntimeLib;
+using IL2CPPUtils = UnhollowerBaseLib.UnhollowerUtils;
 #endif
 
 namespace UniverseLib
 {
-    public class Universe
+    public static class Universe
     {
         public enum GlobalState
         {
@@ -28,9 +32,9 @@ namespace UniverseLib
         }
 
         public const string NAME = "UniverseLib";
-        public const string VERSION = "2.0.0";
-        public const string AUTHOR = "rainbowblood666";
-        public const string GUID = "rainbowblood.universelib";
+        public const string VERSION = "1.5.11";
+        public const string AUTHOR = "Sinai, yukieiji";
+        public const string GUID = "com.sinai.universelib";
 
         /// <summary>The current runtime context (Mono or IL2CPP).</summary>
         public static RuntimeContext Context { get; } =
@@ -54,7 +58,7 @@ namespace UniverseLib
         /// Initialize UniverseLib with default settings, if you don't require any finer control over the startup process.
         /// </summary>
         /// <param name="onInitialized">Invoked after the <c>startupDelay</c>and after UniverseLib has finished initializing.</param>
-        /// <param name="logHandler">Should be used for printing UniverseLib's own internal logs. Your listener will only be used if no listener has 
+        /// <param name="logHandler">Should be used for printing UniverseLib's own internal logs. Your listener will only be used if no listener has
         /// yet been provided to handle it. It is not required to implement this but it may be useful to diagnose internal errors.</param>
         public static void Init(Action onInitialized = null, Action<string, LogType> logHandler = null)
             => Init(1f, onInitialized, logHandler, default);
@@ -65,7 +69,7 @@ namespace UniverseLib
         /// <param name="startupDelay">Will be used only if it is the highest value supplied to this method compared to other assemblies.
         /// If another assembly calls this Init method with a higher startupDelay, their value will be used instead.</param>
         /// <param name="onInitialized">Invoked after the <paramref name="startupDelay"/> and after UniverseLib has finished initializing.</param>
-        /// <param name="logHandler">Should be used for printing UniverseLib's own internal logs. Your listener will only be used if no listener has 
+        /// <param name="logHandler">Should be used for printing UniverseLib's own internal logs. Your listener will only be used if no listener has
         /// yet been provided to handle it. It is not required to implement this but it may be useful to diagnose internal errors.</param>
         /// <param name="config">Can be used to set certain values of UniverseLib's configuration. Null config values will be ignored.</param>
         public static void Init(float startupDelay, Action onInitialized, Action<string, LogType> logHandler, UniverseLibConfig config)
@@ -79,7 +83,9 @@ namespace UniverseLib
 
             // Only use the provided startup delay if its higher than the current value
             if (startupDelay > Universe.startupDelay)
+            {
                 Universe.startupDelay = startupDelay;
+            }
 
             ConfigManager.LoadConfig(config);
 
@@ -194,7 +200,7 @@ namespace UniverseLib
                     return false;
                 }
 
-#if IL2CPP
+#if CPP
                 // if this is an IL2CPP type, ensure method wasn't stripped.
                 if (Il2CppType.From(type, false) != null
                     && IL2CPPUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(target) == null)

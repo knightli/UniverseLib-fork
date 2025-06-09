@@ -33,7 +33,7 @@ namespace UniverseLib.Input
         static float timeOfLastEventSystemSearch;
 
         static readonly AmbiguousMemberHandler<EventSystem, EventSystem> EventSystemCurrent_Handler = new(true, true, "current", "main");
-        
+
         static bool usingEventSystemDictionaryMembers;
 
         static readonly AmbiguousMemberHandler<EventSystem, GameObject> m_CurrentSelected_Handler_Normal
@@ -189,7 +189,8 @@ namespace UniverseLib.Input
             settingEventSystem = true;
 
             UniversalUI.EventSys.enabled = false;
-            UniversalUI.EventSys.currentInputModule?.DeactivateModule();
+            if (UniversalUI.EventSys.currentInputModule != null)
+                UniversalUI.EventSys.currentInputModule.DeactivateModule();
 
             if (lastEventSystem && lastEventSystem.gameObject.activeSelf)
             {

@@ -1,0 +1,12 @@
+{
+  "name": "UniverseLib",
+  "version": "2.0.0",
+  "description": "UniversaLib",
+  "scripts": {
+    "release": "powershell -ExecutionPolicy Bypass -File ./build.ps1 Release",
+    "debug": "powershell -ExecutionPolicy Bypass -File ./build.ps1 Debug",
+    "release-copy": "cd Release/UniverseLib.IL2CPP && copy_dll.bat"
+  },
+  "author": "knightli",
+  "license": "ISC"
+}

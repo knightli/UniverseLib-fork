@@ -43,7 +43,15 @@ namespace UniverseLib.UI.Widgets.ScrollView
         /// <summary>
         /// The GameObject which the ScrollRect is attached to.
         /// </summary>
-        public override GameObject UIRoot => ScrollRect?.gameObject;
+        public override GameObject UIRoot
+        {
+            get
+            {
+                if (ScrollRect != null)
+                    return ScrollRect.gameObject;
+                return null;
+            }
+        }
         public RectTransform Viewport => ScrollRect.viewport;
         public RectTransform Content => ScrollRect.content;
 
@@ -575,7 +583,7 @@ namespace UniverseLib.UI.Widgets.ScrollView
             return recycledheight;
         }
 
-        // Slider 
+        // Slider
 
         private void OnSliderValueChanged(float val)
         {
@@ -695,9 +703,9 @@ namespace UniverseLib.UI.Widgets.ScrollView
             float val = 0f;
             if (TotalDataHeight > 0f)
             {
-                float topPos = 0f;
-                if (HeightCache.Count > 0)
-                    topPos = HeightCache[TopDataIndex].startPosition;
+                float topPos =
+                    HeightCache.TryGetIndexItem(TopDataIndex, out var item) ?
+                    item.startPosition : 0f;
 
                 float scrollPos = topPos + Content.anchoredPosition.y;
 

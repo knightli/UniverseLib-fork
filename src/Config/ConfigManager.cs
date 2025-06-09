@@ -7,7 +7,7 @@ using UniverseLib.UI;
 namespace UniverseLib.Config
 {
     /// <summary>
-    /// Contains properties used by UniverseLib to act as a "config", although it is not really a full config implementation. Changing 
+    /// Contains properties used by UniverseLib to act as a "config", although it is not really a full config implementation. Changing
     /// property values in this class has a direct and immediate effect on UniverseLib.
     /// </summary>
     public static class ConfigManager
@@ -31,6 +31,9 @@ namespace UniverseLib.Config
 
             if (config.Allow_UI_Selection_Outside_UIBase != null)
                 Allow_UI_Selection_Outside_UIBase = config.Allow_UI_Selection_Outside_UIBase.Value;
+
+            if (config.Disable_Setup_Force_ReLoad_ManagedAssemblies != null)
+                Disable_Setup_Force_ReLoad_ManagedAssemblies = config.Disable_Setup_Force_ReLoad_ManagedAssemblies.Value;
         }
 
         /// <summary>If true, disables UniverseLib from overriding the EventSystem from the game when a UniversalUI is in use.</summary>
@@ -48,5 +51,8 @@ namespace UniverseLib.Config
 
         /// <summary>If true, GameObjects which are not a child to a <see cref="UIBase"/> can be selected as the selected GameObject by the EventSystem.</summary>
         public static bool Allow_UI_Selection_Outside_UIBase { get; set; }
+
+        /// <summary>If true, Disable Force ReLoadManagedAssemblies on setup, Currently only Mono is supported</summary>
+        public static bool Disable_Setup_Force_ReLoad_ManagedAssemblies { get; set; }
     }
 }

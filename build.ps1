@@ -1,10 +1,7 @@
-$BuildType = $args[0]
-if ($BuildType -cne "Release" -and $BuildType -cne "Debug")
-{
-  Write-Output "$BuildType must be ""Release"" or ""Debug""" 
-  return -1
-}
+dotnet build .\src\UniverseLib.sln -c Release_IL2CPP_Interop_BIE
 
-dotnet build .\src\UniverseLib.sln -c "${BuildType}_IL2CPP"
+#dotnet build .\src\UniverseLib.sln -c Release_IL2CPP_Interop_ML
 
-#dotnet build .\src\UniverseLib.sln -c "${BuildType}_Mono"
+#dotnet build .\src\UniverseLib.sln -c Release_IL2CPP_Unhollower
+
+#dotnet build .\src\UniverseLib.sln -c Release_Mono

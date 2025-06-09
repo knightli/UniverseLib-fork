@@ -1,15 +1,22 @@
-﻿#if IL2CPP
+﻿#if CPP
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
 using UniverseLib.Runtime.Il2Cpp;
+#if INTEROP
 using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.Attributes;
 using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using IL2CPPType = Il2CppInterop.Runtime.Il2CppType;
+#else
+using UnhollowerRuntimeLib;
+using UnhollowerBaseLib;
+using UnhollowerBaseLib.Attributes;
+using IL2CPPType = UnhollowerRuntimeLib.Il2CppType;
+#endif
 
 namespace UniverseLib
 {
@@ -42,18 +49,18 @@ namespace UniverseLib
 
         // AssetBundle.LoadFromMemory(byte[] binary)
 
-        private delegate IntPtr d_LoadFromMemory(IntPtr binary, uint crc);
+        // private delegate IntPtr d_LoadFromMemory(IntPtr binary, uint crc);
 
-        [HideFromIl2Cpp]
-        public static AssetBundle LoadFromMemory(byte[] binary, uint crc = 0)
-        {
-            IntPtr ptr = ICallManager.GetICallUnreliable<d_LoadFromMemory>(
-                    "UnityEngine.AssetBundle::LoadFromMemory_Internal",
-                    "UnityEngine.AssetBundle::LoadFromMemory")
-                .Invoke(((Il2CppStructArray<byte>)binary).Pointer, crc);
+        // [HideFromIl2Cpp]
+        // public static AssetBundle LoadFromMemory(byte[] binary, uint crc = 0)
+        // {
+        //     IntPtr ptr = ICallManager.GetICallUnreliable<d_LoadFromMemory>(
+        //             "UnityEngine.AssetBundle::LoadFromMemory_Internal",
+        //             "UnityEngine.AssetBundle::LoadFromMemory")
+        //         .Invoke(((Il2CppStructArray<byte>)binary).Pointer, crc);
 
-            return ptr != IntPtr.Zero ? new AssetBundle(ptr) : null;
-        }
+        //     return ptr != IntPtr.Zero ? new AssetBundle(ptr) : null;
+        // }
 
         // AssetBundle.LoadFromMemoryAsync(byte[] binary)
 
