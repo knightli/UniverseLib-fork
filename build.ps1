@@ -7,4 +7,4 @@ if ($BuildType -cne "Release" -and $BuildType -cne "Debug")
 
 dotnet build .\src\UniverseLib.sln -c "${BuildType}_IL2CPP"
 
-dotnet build .\src\UniverseLib.sln -c "${BuildType}_Mono"
+#dotnet build .\src\UniverseLib.sln -c "${BuildType}_Mono"

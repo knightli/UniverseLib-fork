@@ -116,27 +116,45 @@ namespace UniverseLib
 
         internal static void CacheTypes(Assembly asm)
         {
-            foreach (Type type in asm.GetTypes())
+            Type[] types;
+
+            try
             {
-                // Cache namespace if there is one
-                if (!string.IsNullOrEmpty(type.Namespace) && !uniqueNamespaces.Contains(type.Namespace))
+                types = asm.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                types = ReflectionUtility.TryExtractTypesFromException(ex);
+            }
+
+            foreach (Type type in types)
+            {
+                if (type == null)
+                    continue;
+
+                try
                 {
-                    uniqueNamespaces.Add(type.Namespace);
-                    int i = 0;
-                    while (i < AllNamespaces.Count)
+                    // Cache namespace
+                    if (!string.IsNullOrEmpty(type.Namespace) && !uniqueNamespaces.Contains(type.Namespace))
                     {
-                        if (type.Namespace.CompareTo(AllNamespaces[i]) < 0)
-                            break;
-                        i++;
+                        uniqueNamespaces.Add(type.Namespace);
+                        int i = 0;
+                        while (i < AllNamespaces.Count)
+                        {
+                            if (type.Namespace.CompareTo(AllNamespaces[i]) < 0)
+                                break;
+                            i++;
+                        }
+                        AllNamespaces.Insert(i, type.Namespace);
                     }
-                    AllNamespaces.Insert(i, type.Namespace);
+
+                    // Cache the type
+                    AllTypes[type.FullName] = type;
+
+                    // Invoke listener
+                    OnTypeLoaded?.Invoke(type);
                 }
-
-                // Cache the type. Overwrite type if one exists with the full name
-                AllTypes[type.FullName] = type;
-
-                // Invoke listener
-                OnTypeLoaded?.Invoke(type);
+                catch { }
             }
         }
 
@@ -336,7 +354,7 @@ namespace UniverseLib
             }
         }
 
-        static IEnumerator GetImplementationsAsync(Type baseType, HashSet<Type> set, bool allowAbstract, bool allowGeneric, bool allowEnum, 
+        static IEnumerator GetImplementationsAsync(Type baseType, HashSet<Type> set, bool allowAbstract, bool allowGeneric, bool allowEnum,
             IEnumerator<Type> enumerator)
         {
             Stopwatch sw = new();

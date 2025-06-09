@@ -24,7 +24,7 @@
     </PropertyGroup>
     
     <PropertyGroup Condition="$(Configuration.EndsWith('IL2CPP'))">
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ScriptingBackend>IL2CPP</ScriptingBackend>
     </PropertyGroup>
     <PropertyGroup Condition="$(Configuration.EndsWith('Mono'))">

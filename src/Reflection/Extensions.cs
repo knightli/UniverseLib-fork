@@ -108,5 +108,24 @@ namespace UniverseLib
 
             return e;
         }
+
+        private static readonly Dictionary<string, MethodInfo> MethodCache = new();
+
+        /// <summary>
+        /// 获取对象上的 MethodInfo（扩展方法）
+        /// </summary>
+        public static MethodInfo GetMethodInfo(this object obj, string methodName)
+        {
+            Type type = obj.GetType();
+            string cacheKey = $"{type.FullName}.{methodName}";
+
+            if (!MethodCache.TryGetValue(cacheKey, out MethodInfo method))
+            {
+                method = type.GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance);
+                MethodCache[cacheKey] = method;
+            }
+
+            return method;
+        }
     }
 }

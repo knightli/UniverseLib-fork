@@ -55,6 +55,21 @@ namespace UniverseLib
             return ptr != IntPtr.Zero ? new AssetBundle(ptr) : null;
         }
 
+        // AssetBundle.LoadFromMemoryAsync(byte[] binary)
+
+        private delegate IntPtr d_LoadFromMemoryAsync(IntPtr binary, uint crc);
+
+        [HideFromIl2Cpp]
+        public static Il2CppAssetBundleCreateRequest LoadFromMemoryAsync(byte[] binary, uint crc = 0)
+        {
+            IntPtr ptr = ICallManager.GetICallUnreliable<d_LoadFromMemoryAsync>(
+                    "UnityEngine.AssetBundle::LoadFromMemoryAsync_Internal",
+                    "UnityEngine.AssetBundle::LoadFromMemoryAsync")
+                .Invoke(((Il2CppStructArray<byte>)binary).Pointer, crc);
+
+            return ptr != IntPtr.Zero ? new Il2CppAssetBundleCreateRequest(ptr) : null;
+        }
+
         // AssetBundle.GetAllLoadedAssetBundles()
 
         public delegate IntPtr d_GetAllLoadedAssetBundles_Native();

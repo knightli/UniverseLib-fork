@@ -131,8 +131,8 @@ namespace UniverseLib.UI
             // Prevent click-through
             if (EventSys.IsPointerOverGameObject())
             {
-                if (InputManager.MouseScrollDelta.y != 0 
-                    || InputManager.GetMouseButtonUp(0) 
+                if (InputManager.MouseScrollDelta.y != 0
+                    || InputManager.GetMouseButtonUp(0)
                     || InputManager.GetMouseButtonUp(1))
                 {
                     InputManager.ResetInputAxes();
@@ -149,7 +149,7 @@ namespace UniverseLib.UI
             PanelManager.draggerHandledThisFrame = false;
 
             FocussedInAnyPanels = false;
-            
+
             for (int i = 0; i < uiBases.Count; i++)
             {
                 UIBase ui = uiBases[i];
@@ -160,7 +160,7 @@ namespace UniverseLib.UI
                         FocussedInAnyPanels = true;
                 }
             }
-            
+
             // On the legacy input system, it's possible the game will listen for inputs after UniverseLib
             // In these cases, we want to eat as much inputs as possible so long as we have the focus
             if (InputManager.CurrentType == InputType.Legacy && FocussedInAnyPanels && CanEatInput())
@@ -231,7 +231,7 @@ namespace UniverseLib.UI
             catch
             {
                 Universe.LogWarning($"Exception parsing Unity version, falling back to old AssetBundle load method...");
-                UIBundle = LoadBundle("modern") 
+                UIBundle = LoadBundle("modern")
                     ?? LoadBundle("legacy.5.6")
                     ?? LoadBundle("legacy.5.3.4")
                     ?? LoadBundle("legacy");
@@ -269,12 +269,51 @@ namespace UniverseLib.UI
 
         static AssetBundle LoadBundle(string id)
         {
-            AssetBundle bundle = AssetBundle.LoadFromMemory(ReadFully(typeof(Universe)
-                    .Assembly
-                    .GetManifestResourceStream($"UniverseLib.Resources.{id}.bundle")));
-            if (bundle)
-                Universe.Log($"Loaded {id} bundle for Unity {Application.unityVersion}");
-            return bundle;
+            byte[] data = ReadFully(typeof(Universe)
+                .Assembly
+                .GetManifestResourceStream($"UniverseLib.Resources.{id}.bundle"));
+
+            if (data == null || data.Length == 0)
+            {
+                Universe.LogWarning($"Failed to read bundle: {id}");
+                return null;
+            }
+
+            RuntimeHelper.StartCoroutine(LoadBundleAsync(data));
+            return null; // 返回 null，因为异步还没完成
+        }
+
+        private static IEnumerator LoadBundleAsync(byte[] data)
+        {
+            var request = AssetBundle.LoadFromMemoryAsync(data); // 会调用我们上面的 Async 包装方法
+            while (request != null && !request.IsDone)
+            {
+                yield return null;
+            }
+
+            if (request == null)
+            {
+                Universe.Log("AssetBundle request is null!");
+                yield break;
+            }
+
+            AssetBundle bundle = request.AssetBundle;
+            if (bundle != null)
+            {
+                UIBundle = bundle;
+                ConsoleFont = bundle.LoadAsset<Font>("CONSOLA");
+                DefaultFont = bundle.LoadAsset<Font>("arial");
+                BackupShader = bundle.LoadAsset<Shader>("DefaultUI");
+
+                if (BackupShader == null)
+                    BackupShader = Graphic.defaultGraphicMaterial.shader;
+
+                Universe.Log($"Loaded AssetBundle '{UIBundle.name}'");
+            }
+            else
+            {
+                Universe.LogWarning("Failed to load AssetBundle!");
+            }
         }
 
         static byte[] ReadFully(Stream input)
@@ -292,9 +331,9 @@ namespace UniverseLib.UI
         static void SetupAssetBundlePatches()
         {
             Universe.Patch(
-                ReflectionUtility.GetTypeByName("UnityEngine.AssetBundle"), 
-                "UnloadAllAssetBundles", 
-                MethodType.Normal, 
+                ReflectionUtility.GetTypeByName("UnityEngine.AssetBundle"),
+                "UnloadAllAssetBundles",
+                MethodType.Normal,
                 prefix: AccessTools.Method(typeof(UniversalUI), nameof(Prefix_UnloadAllAssetBundles)));
         }
 
